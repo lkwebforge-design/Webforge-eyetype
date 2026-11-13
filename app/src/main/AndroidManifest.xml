@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <uses-feature
+        android:name="android.hardware.camera.front"
+        android:required="false" />
+
     <application
         android:allowBackup="false"
         android:label="EyeType"
@@ -26,5 +35,10 @@
                 android:name="android.view.im"
                 android:resource="@xml/method" />
         </service>
+
+        <service
+            android:name=".gaze.GazeCameraService"
+            android:exported="false"
+            android:foregroundServiceType="camera" />
     </application>
 </manifest>
