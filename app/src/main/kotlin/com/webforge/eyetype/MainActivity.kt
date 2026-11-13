@@ -64,6 +64,10 @@ class MainActivity : Activity() {
             text = "3 · Start eye camera"
             setOnClickListener { requestCameraAndStart() }
         }
+        val calibrate = Button(this).apply {
+            text = "4 · Calibrate gaze"
+            setOnClickListener { startActivity(Intent(this@MainActivity, CalibrationActivity::class.java)) }
+        }
         val stopTracking = Button(this).apply {
             text = "Stop eye camera"
             setOnClickListener {
@@ -78,6 +82,7 @@ class MainActivity : Activity() {
         root.addView(enable)
         root.addView(choose)
         root.addView(startTracking)
+        root.addView(calibrate)
         root.addView(stopTracking)
         setContentView(root)
     }
