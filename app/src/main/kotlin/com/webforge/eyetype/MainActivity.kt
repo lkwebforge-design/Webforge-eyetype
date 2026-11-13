@@ -127,7 +127,7 @@ class MainActivity : Activity() {
             status.text = if (reading == null) {
                 "Looking for your eyes… Keep your face visible and use even lighting. Gaze typing is not enabled until calibration is complete."
             } else {
-                "Eyes detected · tracking confidence \${(reading.confidence * 100).toInt()}% · calibration still required"
+                "Eyes detected · tracking confidence " + (reading.confidence * 100).toInt() + "% · calibration still required"
             }
         }
     }
