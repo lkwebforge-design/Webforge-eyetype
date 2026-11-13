@@ -74,8 +74,39 @@ class FaceGazeTracker(context: Context) : AutoCloseable {
         val inPlausibleRange = gazeX in -0.25f..1.25f && gazeY in -0.25f..1.25f
         if (!inPlausibleRange || eyeDisagreement > 0.65f) return null
 
-        val confidence = (1f - (eyeDisagreement / 0.65f)).coerceIn(0f, 0.85f)
+        val lightingFactor = lightingConfidence(bitmap)
+        val confidence = (1f - (eyeDisagreement / 0.65f)).coerceIn(0f, 0.85f) * lightingFactor
         return RawGaze(gazeX.coerceIn(0f, 1f), gazeY.coerceIn(0f, 1f), confidence)
+    }
+
+    /** Down-weight tracking in very dim or strongly overexposed frames. */
+    private fun lightingConfidence(bitmap: Bitmap): Float {
+        var total = 0.0
+        var count = 0
+        val stepX = (bitmap.width / 24).coerceAtLeast(1)
+        val stepY = (bitmap.height / 18).coerceAtLeast(1)
+        var y = 0
+        while (y < bitmap.height) {
+            var x = 0
+            while (x < bitmap.width) {
+                val pixel = bitmap.getPixel(x, y)
+                val red = (pixel shr 16) and 0xFF
+                val green = (pixel shr 8) and 0xFF
+                val blue = pixel and 0xFF
+                total += 0.2126 * red + 0.7152 * green + 0.0722 * blue
+                count++
+                x += stepX
+            }
+            y += stepY
+        }
+        val mean = if (count == 0) 0.0 else total / count
+        return when {
+            mean < 30.0 -> 0.30f
+            mean < 65.0 -> (0.30 + (mean - 30.0) / 35.0 * 0.70).toFloat()
+            mean > 245.0 -> 0.40f
+            mean > 215.0 -> (1.0 - (mean - 215.0) / 30.0 * 0.60).toFloat()
+            else -> 1.0f
+        }.coerceIn(0.30f, 1.0f)
     }
 
     override fun close() {
