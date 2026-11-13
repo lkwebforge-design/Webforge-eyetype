@@ -15,7 +15,11 @@ class EyeTypeInputMethodService : InputMethodService() {
         when (key) {
             "⌫" -> connection.deleteSurroundingText(1, 0)
             "SPACE" -> connection.commitText(" ", 1)
-            "↵" -> connection.performEditorAction(currentInputEditorInfo?.imeOptions ?: 0)
+            "↵" -> {
+                val actionId = currentInputEditorInfo?.actionId ?: 0
+                if (actionId != 0) connection.performEditorAction(actionId)
+                else connection.commitText("\n", 1)
+            }
             else -> connection.commitText(key, 1)
         }
     }
@@ -37,7 +41,7 @@ private class EyeTypeKeyboardView(
     private val symbols = listOf(
         listOf("1","2","3","4","5","6","7","8","9","0"),
         listOf("@","#","$","%","&","-","+","(",")"),
-        listOf("=,”","*","\"","' ",":",";","!","?","⌫"),
+        listOf("=","*","' ",":",";","!","?","~","⌫"),
         listOf("ABC",",","SPACE",".","↵")
     )
 
@@ -51,7 +55,7 @@ private class EyeTypeKeyboardView(
     private fun render() {
         removeAllViews()
         val rows = if (symbolsMode) symbols else letters
-        rows.forEachIndexed { rowIndex, row ->
+        rows.forEach { row ->
             val grid = GridLayout(context).apply {
                 columnCount = row.size
                 useDefaultMargins = true
@@ -59,11 +63,6 @@ private class EyeTypeKeyboardView(
             row.forEach { rawLabel ->
                 val label = when {
                     rawLabel == "SPACE" -> "English"
-                    rawLabel == "?123" -> "?123"
-                    rawLabel == "ABC" -> "ABC"
-                    rawLabel == "⇧" -> "⇧"
-                    rawLabel == "⌫" -> "⌫"
-                    rawLabel == "↵" -> "↵"
                     rawLabel.length == 1 && rawLabel[0].isLetter() && !shiftMode -> rawLabel.lowercase()
                     else -> rawLabel
                 }
@@ -104,7 +103,8 @@ private class EyeTypeKeyboardView(
             "ABC" -> { symbolsMode = false; render() }
             "⇧" -> { shiftMode = !shiftMode; render() }
             else -> {
-                onKey(if (!symbolsMode && shiftMode && key.length == 1 && key[0].isLetter()) key.uppercase() else key)
+                val output = if (!symbolsMode && shiftMode && key.length == 1 && key[0].isLetter()) key.uppercase() else key
+                onKey(output)
                 if (shiftMode && key.length == 1 && key[0].isLetter()) {
                     shiftMode = false
                     render()
