@@ -22,6 +22,12 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
+      - name: Download Face Landmarker model
+        run: |
+          mkdir -p app/src/main/assets
+          curl --fail --location --retry 3 \
+            https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task \
+            --output app/src/main/assets/face_landmarker.task
       - name: Build debug APK
         run: gradle :app:assembleDebug
       - name: Upload debug APK
