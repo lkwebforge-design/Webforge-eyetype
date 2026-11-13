@@ -32,12 +32,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.webforge.eyetype.keyboard
-        GENERATE_INFOPLIST_FILE: YES
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: Keyboard-Info.plist
         SWIFT_VERSION: "5.0"
         TARGETED_DEVICE_FAMILY: "1"
         APPLICATION_EXTENSION_API_ONLY: YES
-        INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier: com.apple.keyboard-service
-        INFOPLIST_KEY_NSExtension_NSExtensionPrincipalClass: "$(PRODUCT_MODULE_NAME).EyeTypeKeyboardViewController"
-        INFOPLIST_KEY_NSExtension_Attributes_PrimaryLanguage: "en"
-        INFOPLIST_KEY_NSExtension_Attributes_IsASCIICapable: YES
-        INFOPLIST_KEY_NSExtension_Attributes_RequestsOpenAccess: NO
