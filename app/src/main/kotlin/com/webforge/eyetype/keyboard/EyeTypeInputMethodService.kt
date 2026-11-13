@@ -5,6 +5,11 @@ import android.view.View
 import android.widget.Button
 import android.widget.GridLayout
 import android.widget.LinearLayout
+import android.widget.TextView
+import com.webforge.eyetype.gaze.GazeCalibration
+import com.webforge.eyetype.gaze.GazeCalibrationStore
+import com.webforge.eyetype.gaze.GazeSelectionController
+import com.webforge.eyetype.gaze.GazeState
 
 class EyeTypeInputMethodService : InputMethodService() {
     override fun onCreateInputView(): View =
@@ -31,6 +36,34 @@ private class EyeTypeKeyboardView(
 ) : LinearLayout(service) {
     private var symbolsMode = false
     private var shiftMode = false
+    private val keyButtons = mutableListOf<Button>()
+    private val calibration: GazeCalibration? = GazeCalibrationStore.load(service)
+    private lateinit var trackingStatus: TextView
+
+    private val gazeController = GazeSelectionController(dwellMillis = 500L) { x, y ->
+        post { selectAtScreenPosition(x, y) }
+    }
+
+    private val gazeListener: (GazeState.Reading?) -> Unit = { reading ->
+        post {
+            if (calibration == null) {
+                trackingStatus.text = "Touch mode · complete gaze calibration in EyeType"
+                gazeController.reset()
+            } else if (reading == null) {
+                trackingStatus.text = "Eyes not detected · touch keys still work"
+                gazeController.reset()
+            } else {
+                val mapped = calibration.map(reading.x, reading.y)
+                if (mapped == null || reading.confidence < 0.70f) {
+                    trackingStatus.text = "Tracking uncertain · gaze typing paused"
+                    gazeController.reset()
+                } else {
+                    trackingStatus.text = "Gaze ready · hold a key for 500 ms"
+                    gazeController.update(mapped.x, mapped.y, reading.confidence)
+                }
+            }
+        }
+    }
 
     private val letters = listOf(
         listOf("Q","W","E","R","T","Y","U","I","O","P"),
@@ -49,11 +82,35 @@ private class EyeTypeKeyboardView(
         orientation = VERTICAL
         setPadding(6, 8, 6, 8)
         setBackgroundColor(0xFF101713.toInt())
+        trackingStatus = TextView(context).apply {
+            text = if (calibration == null) {
+                "Touch mode · complete gaze calibration in EyeType"
+            } else {
+                "Gaze tracking paused"
+            }
+            textSize = 11f
+            gravity = android.view.Gravity.CENTER
+            setTextColor(0xFFB7C8BD.toInt())
+            setPadding(4, 2, 4, 6)
+        }
+        addView(trackingStatus, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT))
         render()
     }
 
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        GazeState.subscribe(gazeListener)
+    }
+
+    override fun onDetachedFromWindow() {
+        GazeState.unsubscribe(gazeListener)
+        gazeController.reset()
+        super.onDetachedFromWindow()
+    }
+
     private fun render() {
-        removeAllViews()
+        while (childCount > 1) removeViewAt(1)
+        keyButtons.clear()
         val rows = if (symbolsMode) symbols else letters
         rows.forEach { row ->
             val grid = GridLayout(context).apply {
@@ -86,6 +143,7 @@ private class EyeTypeKeyboardView(
                     }
                     setOnClickListener { handleKey(rawLabel) }
                 }
+                keyButtons.add(button)
                 grid.addView(button, GridLayout.LayoutParams().apply {
                     width = 0
                     height = if (rawLabel == "SPACE") 48 else 52
@@ -111,5 +169,17 @@ private class EyeTypeKeyboardView(
                 }
             }
         }
+    }
+
+    private fun selectAtScreenPosition(normalizedX: Float, normalizedY: Float) {
+        val metrics = resources.displayMetrics
+        val screenX = (normalizedX * metrics.widthPixels).toInt()
+        val screenY = (normalizedY * metrics.heightPixels).toInt()
+        keyButtons.firstOrNull { button ->
+            val location = IntArray(2)
+            button.getLocationOnScreen(location)
+            screenX >= location[0] && screenX <= location[0] + button.width &&
+                screenY >= location[1] && screenY <= location[1] + button.height
+        }?.performClick()
     }
 }
