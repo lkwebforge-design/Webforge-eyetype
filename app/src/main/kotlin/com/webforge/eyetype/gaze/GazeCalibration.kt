@@ -28,6 +28,7 @@ class GazeCalibration {
         private set
 
     val sampleCount: Int get() = samples.size
+    fun samplesSnapshot(): List<Sample> = samples.toList()
     val isUsable: Boolean
         get() = samples.size >= REQUIRED_SAMPLES &&
             xCoefficients != null &&
