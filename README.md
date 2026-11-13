@@ -30,11 +30,13 @@ This first source milestone establishes:
 
 ## Build Android
 
-Open the repository in Android Studio and use JDK 17 with Android SDK 35.
+Open the repository in Android Studio and use JDK 17 with Android SDK 35. If Gradle 8.9 is installed:
 
 ```bash
-./gradlew :app:assembleDebug
+gradle :app:assembleDebug
 ```
+
+A GitHub Actions workflow is included to build the Android debug APK automatically on pushes to `main`.
 
 ## Safety and accessibility
 EyeType must always provide a clear pause/disable path, a touch fallback, visible tracking status, and a way to undo accidental input. It must not claim reliable operation in complete darkness or direct glare. If tracking quality is poor, pause gaze selection and ask the user to adjust lighting or recalibrate.
