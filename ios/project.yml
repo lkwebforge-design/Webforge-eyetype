@@ -1,0 +1,43 @@
+name: EyeType
+
+options:
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+
+targets:
+  EyeType:
+    type: application
+    platform: iOS
+    sources:
+      - path: EyeTypeApp.swift
+    dependencies:
+      - target: EyeTypeKeyboard
+        embed: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.webforge.eyetype
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1"
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait"
+
+  EyeTypeKeyboard:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: EyeTypeKeyboardViewController.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.webforge.eyetype.keyboard
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1"
+        APPLICATION_EXTENSION_API_ONLY: YES
+        INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier: com.apple.keyboard-service
+        INFOPLIST_KEY_NSExtension_NSExtensionPrincipalClass: "$(PRODUCT_MODULE_NAME).EyeTypeKeyboardViewController"
+        INFOPLIST_KEY_NSExtension_Attributes_PrimaryLanguage: "en"
+        INFOPLIST_KEY_NSExtension_Attributes_IsASCIICapable: YES
+        INFOPLIST_KEY_NSExtension_Attributes_RequestsOpenAccess: NO
